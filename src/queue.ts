@@ -55,9 +55,14 @@ export interface Job {
 export type JobRunner = (job: Job) => Promise<string[]>;
 
 // Flow is driven like a careful person would: one generation at a time, with a
-// randomised pause between them.
+// randomised pause between them. Images cost nothing and finish fast, so they get a shorter gap; videos spend
+// credits and keep the long one. Never overlap generations to go faster: starting image prompts 2-5 s apart while
+// earlier ones still rendered made Flow fail them with "We noticed some unusual activity" (2026-10-24). For parallel
+// images use flow_agent_images, which is Flow's own feature.
 const PAUSE_MIN_MS = Number(process.env.FLOW_MCP_PAUSE_MIN_S ?? 25) * 1000;
 const PAUSE_MAX_MS = Number(process.env.FLOW_MCP_PAUSE_MAX_S ?? 70) * 1000;
+const IMAGE_PAUSE_MIN_MS = Number(process.env.FLOW_MCP_IMAGE_PAUSE_MIN_S ?? 10) * 1000;
+const IMAGE_PAUSE_MAX_MS = Number(process.env.FLOW_MCP_IMAGE_PAUSE_MAX_S ?? 20) * 1000;
 
 export class JobQueue {
   private jobs = new Map<string, Job>();
@@ -122,7 +127,9 @@ export class JobQueue {
         const job = this.list().find((j) => j.status === "queued");
         if (!job) return;
         if (this.lastFinished) {
-          const pause = PAUSE_MIN_MS + Math.random() * (PAUSE_MAX_MS - PAUSE_MIN_MS);
+          const [min, max] =
+            job.params.type === "image" ? [IMAGE_PAUSE_MIN_MS, IMAGE_PAUSE_MAX_MS] : [PAUSE_MIN_MS, PAUSE_MAX_MS];
+          const pause = min + Math.random() * (max - min);
           const remaining = this.lastFinished + pause - Date.now();
           if (remaining > 0) {
             this.pausedReason = `pacing: next generation in ${Math.ceil(remaining / 1000)}s`;

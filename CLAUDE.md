@@ -17,6 +17,7 @@ OmniFlow (lingoflow.pro/omniflow), using subscription credits instead of the API
 - Anything that spends credits needs the user's OK first. Images (Nano Banana 2) cost 0 and exercise the same pipeline.
 - Never enter Google credentials; the user signs in by hand via `npm run login`.
 - No bot-detection evasion. The page has invisible reCAPTCHA; we only drive the real UI at human pace.
+  Never overlap composer generations to go faster (see "UNUSUAL ACTIVITY" below), and never hunt for the threshold.
 - MCP FIRST, ALWAYS. When a new Flow capability or workaround is learned, build it into the MCP before using it for
   the task at hand, and do not ask whether to - the user has made this standing. Hand-driving a path once and moving
   on is not acceptable: the next run must be able to do it through the tools. Map the selectors live, wire the
@@ -510,3 +511,12 @@ The preview tool could not read the project while it lived in ~/Desktop; check t
 - CAPTIONS WORKFLOW (the user's rule, 2026-10-18): transcribe first, show the words with likely mishearings fixed,
   get the user's OK, THEN make the video once. The playbook and the flow_captions description say so too.
 
+- UNUSUAL ACTIVITY (2026-10-24, do not repeat). The user asked for faster image batches. Mapped live: the composer
+  accepts a new prompt while earlier images still render (2 side by side worked; an image takes ~15 s; a rendering
+  tile is titled with its prompt, and "Reuse prompt" on a finished one gives the exact prompt back in ~1 s). A
+  pipelined engine was built that started each prompt 2-5 s after the last. On its first 6-scene test Flow rendered
+  2 and failed the other 5 with a flow-error-tile reading "We noticed some unusual activity. Note that browser
+  extensions that modify the page may cause issues..." (not charged). That is Google's abuse detection, so the engine
+  was removed unmerged and the test stopped at once. Parallel images go through flow_agent_images (Flow's own agent)
+  only. The queue's image gap is now 10-20 s (FLOW_MCP_IMAGE_PAUSE_MIN_S/MAX_S); videos keep 25-70 s. Those 5 failed
+  tiles plus 4 test stills (lemon, succulent, apple, mug) are in the user's Cura ads project.
