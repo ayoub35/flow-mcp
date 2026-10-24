@@ -527,3 +527,8 @@ The preview tool could not read the project while it lived in ~/Desktop; check t
   result. Now freshMedia skips flow-error-tile, waitForNewMedia reads `.error-message-text` (newErrorMessage) and on
   FLAGGED (/unusual activity/i) throws at once without pressing Retry, and the queue cancels every other queued job.
   Replayed on the two live flagged tiles: freshMedia -> [], message matched.
+  FLAGGED AGAIN MID-BATCH (2026-10-25, ~6 h after the last refusal; the user had made one image by hand first): a
+  10-image flow_generate batch with the 10-20 s image gap made images 1-8, then image 9 was refused with "unusual
+  activity". The new handling worked as designed: the job said so in words and image 10 was cancelled. For comparison,
+  the first 10-image batch on 2026-10-24 ran clean with the old 25-70 s gap. Not proof (the account had just been
+  flagged), but the short image gap is the main suspect.
