@@ -37,7 +37,7 @@ headless or asleep mid-run.
 ## Install
 
 ```bash
-git clone https://github.com/GTAI-1/flow-mcp.git
+git clone https://github.com/ayoub35/flow-mcp.git
 cd flow-mcp
 npm install
 npm run build
