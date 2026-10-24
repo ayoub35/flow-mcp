@@ -518,7 +518,7 @@ The preview tool could not read the project while it lived in ~/Desktop; check t
   2 and failed the other 5 with a flow-error-tile reading "We noticed some unusual activity. Note that browser
   extensions that modify the page may cause issues..." (not charged). That is Google's abuse detection, so the engine
   was removed unmerged and the test stopped at once. Parallel images go through flow_agent_images (Flow's own agent)
-  only. The queue's image gap is now 10-20 s (FLOW_MCP_IMAGE_PAUSE_MIN_S/MAX_S); videos keep 25-70 s. Those 5 failed
+  only. The queue's image gap was then 10-20 s and is now 25-35 s (see below); videos keep 25-70 s. Those 5 failed
   tiles plus 4 test stills (lemon, succulent, apple, mug) are in the user's project.
   STILL FLAGGED AFTER A RESTART (2026-10-24, ~1 h later, the user asked for a test): 3 plain images one at a time
   (10-20 s gaps, no overlap) -> images 1 and 2 both refused with the same "unusual activity" tile; image 3 cancelled.
@@ -532,3 +532,4 @@ The preview tool could not read the project while it lived in ~/Desktop; check t
   activity". The new handling worked as designed: the job said so in words and image 10 was cancelled. For comparison,
   the first 10-image batch on 2026-10-24 ran clean with the old 25-70 s gap. Not proof (the account had just been
   flagged), but the short image gap is the main suspect.
+  The user's call (2026-10-25): images now wait 25-35 s between jobs (FLOW_MCP_IMAGE_PAUSE_MIN_S/MAX_S).

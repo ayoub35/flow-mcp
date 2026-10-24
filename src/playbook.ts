@@ -4,7 +4,7 @@ export const PLAYBOOK = {
     "Call flow_status first. If it returns a hint, relay it to the user and stop.",
     "Plan the whole piece as scenes of one shot each, then send them in ONE flow_generate call so file numbering and chaining work.",
     "Tell the user the expected credit total before queueing anything that costs credits.",
-    "Call flow_wait repeatedly until finished is true; scenes run one at a time, with 10-20 s between images and 25-70 s between videos.",
+    "Call flow_wait repeatedly until finished is true; scenes run one at a time, with 25-35 s between images and 25-70 s between videos.",
     "For 5 or more images use flow_agent_images: Flow's own agent renders the whole batch in parallel (about 3-4 min for 20). It rewords prompts, so on-image text such as ad headlines can drift: use flow_generate when the words must be exact. For two takes of one prompt set variants: 2 rather than repeating the scene.",
     "To put the spoken words on screen: FIRST call flow_transcribe on the film (with `language`), show the user the words, flag anything that looks misheard (names especially, and words run together), propose the fixes, and wait for the user to confirm or correct them. Only then call flow_captions once, passing the agreed words as `text` (style bold for short-form, clean for subtitles).",
     "If an image batch finishes with \"still failed: scene ...\" in its note, call flow_retry with its job id: only those images are made again, under their own scene numbers.",
