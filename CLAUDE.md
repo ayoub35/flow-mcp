@@ -520,3 +520,10 @@ The preview tool could not read the project while it lived in ~/Desktop; check t
   was removed unmerged and the test stopped at once. Parallel images go through flow_agent_images (Flow's own agent)
   only. The queue's image gap is now 10-20 s (FLOW_MCP_IMAGE_PAUSE_MIN_S/MAX_S); videos keep 25-70 s. Those 5 failed
   tiles plus 4 test stills (lemon, succulent, apple, mug) are in the user's Cura ads project.
+  STILL FLAGGED AFTER A RESTART (2026-10-24, ~1 h later, the user asked for a test): 3 plain images one at a time
+  (10-20 s gaps, no overlap) -> images 1 and 2 both refused with the same "unusual activity" tile; image 3 cancelled.
+  So the flag sits on the account/browser for a while, not on the pace of one run. The MCP had reported it as
+  "Flow's tile menu did not open": freshMedia took the error tile (titled with the prompt, id "title:<prompt>") for the
+  result. Now freshMedia skips flow-error-tile, waitForNewMedia reads `.error-message-text` (newErrorMessage) and on
+  FLAGGED (/unusual activity/i) throws at once without pressing Retry, and the queue cancels every other queued job.
+  Replayed on the two live flagged tiles: freshMedia -> [], message matched.

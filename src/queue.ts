@@ -150,6 +150,14 @@ export class JobQueue {
           // is re-queued here. Timeouts are never retried automatically: they may still have spent credits.
           const retryable = /agent finished without creating/i.test(job.error);
           job.status = retryable && job.attempts <= (job.params.retries ?? 1) ? "queued" : "failed";
+          // Once Google's abuse check has refused one generation, every queued job would only knock again.
+          if (/unusual activity/i.test(job.error)) {
+            for (const other of this.list().filter((j) => j.status === "queued")) {
+              other.status = "cancelled";
+              other.error = "Cancelled: Flow flagged unusual activity on an earlier job in the queue.";
+              other.finishedAt = new Date().toISOString();
+            }
+          }
         }
         job.finishedAt = new Date().toISOString();
         this.lastFinished = Date.now();

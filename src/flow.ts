@@ -161,6 +161,26 @@ export async function newErrorTiles(page: Page, known: Iterable<string>): Promis
   }, [[...known], TILE_ID_JS] as [string[], string]);
 }
 
+// What the newest failed tile says (`.error-message-text`), e.g. "Sorry, this image failed to generate." or Google's
+// "We noticed some unusual activity...", which Flow shows when its abuse check refuses a generation.
+async function newErrorMessage(page: Page, known: Iterable<string>): Promise<string> {
+  return page.evaluate(([ids, js]: [string[], string]) => {
+    const seen = new Set(ids);
+    for (const tile of document.querySelectorAll("flow-grid-tile-container")) {
+      const id = (eval(js) as (t: Element) => string | undefined)(tile);
+      if (id && seen.has(id)) break;
+      const error = tile.querySelector("flow-error-tile");
+      if (error) return (error.querySelector(".error-message-text") as HTMLElement | null)?.innerText ?? (error as HTMLElement).innerText;
+    }
+    return "";
+  }, [[...known], TILE_ID_JS] as [string[], string]);
+}
+
+export const FLAGGED = /unusual activity/i;
+const FLAGGED_MESSAGE =
+  'Flow refused this image: "We noticed some unusual activity". That is Google\'s abuse check, not a fault in the prompt; ' +
+  "nothing was charged. The rest of the queue was stopped. Leave Flow alone for a while (hours) before generating again.";
+
 // Flow's Retry replaces the failed tile with a fresh render of the same prompt and settings, free of charge.
 // Tiles produced by Agent mode only offer Delete, so the button may not be there at all.
 async function retryErrorTile(page: Page, tile: Locator): Promise<boolean> {
@@ -248,6 +268,9 @@ export async function freshMedia(page: Page, before: string[], kind?: MediaKind)
         // has its thumbnail (watched live 2026-10-16, a 4 s clip: prompt title at 9 s, "0%" at 12 s, 100% at 34 s,
         // thumbnail at 35 s). The old test - no "NN%" means done - took the tile in those first seconds and lost a
         // user's clip. A video without its thumbnail counts as busy.
+        // A failed generation is a tile too, titled with the prompt; taking it for the result reported "Flow's tile menu
+        // did not open" when Flow had refused the image (2026-10-24), so failures are left to the error check.
+        error: !!t.querySelector("flow-error-tile"),
         busy:
           /\d+%/.test((t as HTMLElement).innerText) ||
           (!!t.querySelector("flow-video-tile") && !t.querySelector('img[alt="Generated video thumbnail"], video')),
@@ -255,7 +278,7 @@ export async function freshMedia(page: Page, before: string[], kind?: MediaKind)
     },
     TILE_ID_JS,
   );
-  const ours = tiles.filter((t) => t.id && !before.includes(t.id) && !t.label.startsWith("fm-") && !t.busy && (!kind || t.kind === kind));
+  const ours = tiles.filter((t) => t.id && !before.includes(t.id) && !t.label.startsWith("fm-") && !t.busy && !t.error && (!kind || t.kind === kind));
   return [...new Set(ours.map((t) => t.id!))];
 }
 
@@ -284,6 +307,8 @@ async function waitForNewMedia(page: Page, before: string[], count: number, time
     if (job) job.progress = progress.join(", ") || undefined;
     const errors = progress.length ? 0 : await newErrorTiles(page, before);
     if (!errors) continue;
+    // Google's abuse check refuses the image outright. Retry would only knock again, so stop and say what Flow said.
+    if (FLAGGED.test(await newErrorMessage(page, before))) throw new Error(FLAGGED_MESSAGE);
     failures += errors;
     if (retriesLeft > 0) {
       retriesLeft--;
