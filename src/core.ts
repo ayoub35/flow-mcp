@@ -11,7 +11,10 @@ import { JobQueue, type Job } from "./queue.js";
 import { BIN, COMPUTER, IS_MAC, IS_WIN, moveToBin } from "./platform.js";
 import { TECHNIQUES, techniqueById } from "./techniques.js";
 
-export const OUTPUT_ROOT = process.env.FLOW_MCP_OUTPUT ?? join(homedir(), "flow-mcp-out");
+// Everything made lands in the user's own Downloads folder, under Flow/<project> (the user's call, 2026-10-25: their team
+// looks for files there). A subfolder, never Downloads itself: waitForDownloadedFile watches the top of ~/Downloads for
+// Chrome's incoming files.
+export const OUTPUT_ROOT = process.env.FLOW_MCP_OUTPUT ?? join(homedir(), "Downloads", "Flow");
 const words = (s: string) => s.split(/[^a-z0-9]+/i).filter((w) => w.length > 3).map((w) => w.toLowerCase());
 
 export const projectDir = (project: string) => resolve(OUTPUT_ROOT, project.replace(/[^\w.-]+/g, "_"));

@@ -578,6 +578,8 @@ async function waitForDownloadedFile(page: Page, before: Set<string>, timeoutMs:
       if (!existsSync(dir)) continue;
       for (const f of readdirSync(dir)) {
         if (before.has(`${dir}/${f}`) || f.endsWith(".crdownload") || f.startsWith(".")) continue;
+        // Folders are never a download, and ~/Downloads now also holds the tool's own Flow output folder.
+        if (!statSync(join(dir, f)).isFile()) continue;
         candidates.push(join(dir, f));
       }
     }
@@ -951,7 +953,7 @@ async function leaveCharacterEditor(page: Page): Promise<void> {
 // download through the same watched folders as every other file.
 async function savePortrait(page: Page, name: string): Promise<string> {
   await useOwnDownloadDir(page);
-  const dir = join(process.env.FLOW_MCP_OUTPUT ?? join(homedir(), "flow-mcp-out"), "_cast");
+  const dir = join(process.env.FLOW_MCP_OUTPUT ?? join(homedir(), "Downloads", "Flow"), "_cast");
   mkdirSync(dir, { recursive: true });
   const picture = page.getByRole("img", { name: "Generated character image" }).first();
   const button = page.getByRole("button", { name: "Download image", exact: true });
@@ -1178,7 +1180,7 @@ export async function createCharacter(c: CharacterParams, job?: Job): Promise<{ 
   if (!c.image) {
     if (!c.describe) throw new Error("Pass either an image or a description for the character.");
     if (job) job.progress = "drawing the character";
-    const dir = join(process.env.FLOW_MCP_OUTPUT ?? join(homedir(), "flow-mcp-out"), "_cast");
+    const dir = join(process.env.FLOW_MCP_OUTPUT ?? join(homedir(), "Downloads", "Flow"), "_cast");
     const made = await runGeneration({
       ...(job ?? ({ id: "char", status: "running", files: [], attempts: 1, createdAt: "" } as unknown as Job)),
       files: [],

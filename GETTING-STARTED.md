@@ -188,7 +188,7 @@ asks before spending.
 6. *"Put the narration on the clip."* (free)
 7. *"Add bold captions."* (free)
 
-Everything you make is saved in the **flow-mcp-out** folder in your home folder.
+Everything you make is saved in your **Downloads** folder, in **Downloads/Flow/<project name>**.
 
 **No assistant?** Open Flow Studio and work through its tabs from left to right: Cast, Frames, Shots,
 Voice, Restyle, Cut, Captions.

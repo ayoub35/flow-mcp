@@ -33,7 +33,7 @@ Three abbreviations you'll see, spelled out once:
 2. The program on your computer receives it and works out the exact steps.
 3. It drives the private Chrome window: typing the prompt, choosing the
    settings, pressing generate, waiting, and saving the finished file to
-   `~/flow-mcp-out`.
+   `~/Downloads/Flow`.
 
 No browser extension is involved, and your everyday Chrome is never touched:
 the program uses its own separate Chrome profile so your normal browsing,
@@ -205,7 +205,7 @@ The same goes for a job that seems to vanish while it is running. What Flow is h
 | What | Where |
 |---|---|
 | The program | `~/flow-mcp` |
-| Finished films and stills | `~/flow-mcp-out/<project name>` |
+| Finished films and stills | `~/Downloads/Flow/<project name>` |
 | The private Chrome profile | `~/.flow-mcp/chrome-profile` |
 | The control panel | Started by **Flow Studio.command** (Mac) or **Flow Studio.cmd** (Windows), opens on your computer only |
 | Sign in to Flow by hand | `npm run login` in the project folder |
