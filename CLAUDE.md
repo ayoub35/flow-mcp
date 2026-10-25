@@ -533,3 +533,11 @@ The preview tool could not read the project while it lived in ~/Desktop; check t
   the first 10-image batch on 2026-10-24 ran clean with the old 25-70 s gap. Not proof (the account had just been
   flagged), but the short image gap is the main suspect.
   The user's call (2026-10-25): images now wait 25-35 s between jobs (FLOW_MCP_IMAGE_PAUSE_MIN_S/MAX_S).
+- DOWNLOAD IS OPTIONAL (2026-10-25, the user's request: "not always we wanna download them"). flow_generate scenes and
+  flow_agent_images take `download` (default true). false: runGeneration renames the tile <project>-<stem> as always
+  and skips the download; agentRound renames each matched tile <project>-scene-NN instead of downloading it (same
+  4-4.4 s pace). The job ends "done" with no files and a note naming flow_download. Built and type-checked; not yet
+  run live (needs the user's next Claude restart).
+- AGENT MASS TEST (2026-10-25, a supplement pouch as the one reference, cut out of an ad with headless Chrome): 15 x 1:1
+  in 212 s and 10 x 9:16 in 202 s, 25/25 from the agent, no failures, no flag, 0 credits. The pouch came out on-model in
+  every scene; its fine print smudges when the pouch is small in frame, the big wordmark stays sharp.

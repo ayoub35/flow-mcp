@@ -19,6 +19,9 @@ const words = (s: string) => s.split(/[^a-z0-9]+/i).filter((w) => w.length > 3).
 
 export const projectDir = (project: string) => resolve(OUTPUT_ROOT, project.replace(/[^\w.-]+/g, "_"));
 
+const DOWNLOAD_HELP =
+  "false leaves the results in the Flow project only, renamed <project>-scene-NN, so nothing lands on this computer; fetch the keepers later with flow_download. Default true.";
+
 const sceneSchema = z.object({
   prompt: z.string().min(1).describe("Full English prompt for one clip: action, shot and camera move, location, style, light, sound."),
   type: z.enum(["video", "image"]).default("video"),
@@ -41,6 +44,7 @@ const sceneSchema = z.object({
       "Reference media: absolute image paths, or 'asset:<title>' for media or characters already in the Flow project. Flow's COMPOSER takes references OR first/last frames on a video scene, never both, so with frames set these are skipped and the job says so. Flow itself can do both via agent mode (save the last frame, Animate it, then add the character).",
     ),
   download_quality: z.enum(["original", "upscaled"]).optional().describe("'upscaled' fetches 1080p video / 2K image (free, slower). Default original."),
+  download: z.boolean().default(true).describe(DOWNLOAD_HELP),
   retries: z.number().int().min(0).max(3).default(1).describe("Automatic retries when Flow itself reports the generation failed."),
   technique: z.string().optional().describe("Id from flow_techniques (e.g. 'orbit-360'); its exact phrase is appended to the prompt. One per scene."),
   reference_previous: z
@@ -159,6 +163,7 @@ export const shapes = {
     scenes: z.array(z.string().min(1)).min(1).max(50).describe("One image description per scene, in order."),
     aspect_ratio: z.enum(["16:9", "9:16", "1:1", "4:3", "3:4"]).default("16:9"),
     download_quality: z.enum(["original", "upscaled"]).optional(),
+    download: z.boolean().default(true).describe(DOWNLOAD_HELP),
     references: z
       .array(
         z.object({
@@ -541,7 +546,7 @@ export class LocalCore implements Core {
     return `${prefix}-${String(Math.max(0, ...onDisk, ...queued) + 1).padStart(2, "0")}`;
   }
 
-  async agent({ project, scenes, aspect_ratio, download_quality, references, scene_references }: Args<"agent">) {
+  async agent({ project, scenes, aspect_ratio, download_quality, download, references, scene_references }: Args<"agent">) {
     const output_dir = projectDir(project);
     if (scene_references && scene_references.length !== scenes.length) {
       throw new Error(`scene_references has ${scene_references.length} entries for ${scenes.length} scenes; give one list per scene (empty for none).`);
@@ -560,6 +565,7 @@ export class LocalCore implements Core {
       max_credits: 0,
       aspect_ratio,
       download_quality,
+      download,
       agent_scenes: scenes,
       output_dir,
       file_stem: this.nextStem(output_dir, "scene"),

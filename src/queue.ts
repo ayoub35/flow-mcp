@@ -32,6 +32,8 @@ export interface SceneParams {
   continue_mode?: "exact" | "likeness";
   retries?: number;
   download_quality?: "original" | "upscaled";
+  // false leaves the results in the Flow project only (renamed <project>-<stem> so flow_download can fetch them later).
+  download?: boolean;
   output_dir: string;
   file_stem: string;
 }

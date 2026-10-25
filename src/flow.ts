@@ -866,6 +866,11 @@ export async function runGeneration(job: Job): Promise<string[]> {
     // old title failed every such download after 30 s ("locator.waitFor: Timeout 30000ms exceeded ... aria-label=
     // <the prompt>", reported by a user, 2026-10-15) while the clip sat finished and renamed in Flow.
     const handle = renamed && id.startsWith("title:") ? `title:${newTitle}` : id;
+    // download: false (the user's call, 2026-10-25: "not always we wanna download them") keeps it in Flow only.
+    if (s.download === false) {
+      job.note = [job.note, `kept in Flow only (flow_download ${newTitle} to fetch it)`].filter(Boolean).join(" · ");
+      continue;
+    }
     files.push(...(await downloadMedia(page, handle, stem, s.download_quality)));
     await pause(page, 1500);
   }
@@ -1563,9 +1568,15 @@ async function agentRound(
       const started = Date.now();
       // New tiles sit at the top of the grid, so a scan is only needed when this one has scrolled out of the page.
       if (!(await mediaTile(page, id).count())) await scanGrid(page, (seen) => seen.some((x) => x.id === id));
-      const stem = join(s.output_dir, `scene-${String(numberOf(sceneIndex)).padStart(2, "0")}${v ? `-v${v + 1}` : ""}`);
-      step(job, `downloading scene ${numberOf(sceneIndex)}`);
-      files.push(...(await downloadTile(page, mediaTile(page, id), stem, s.download_quality ?? "original")));
+      const label = `scene-${String(numberOf(sceneIndex)).padStart(2, "0")}${v ? `-v${v + 1}` : ""}`;
+      if (s.download === false) {
+        // Left in Flow only, but renamed like a one-by-one result so flow_download can find it by scene later.
+        step(job, `naming scene ${numberOf(sceneIndex)} in Flow`);
+        await renameTile(page, mediaTile(page, id), `${basename(s.output_dir)}-${label}`).catch(() => false);
+      } else {
+        step(job, `downloading scene ${numberOf(sceneIndex)}`);
+        files.push(...(await downloadTile(page, mediaTile(page, id), join(s.output_dir, label), s.download_quality ?? "original")));
+      }
       await pause(page, Math.max(0, downloadPace() - (Date.now() - started)));
     }
     done.add(sceneIndex);
@@ -1783,6 +1794,7 @@ export async function runAgentBatch(job: Job): Promise<string[]> {
         reference_images: refsFor(i),
         aspect_ratio: s.aspect_ratio,
         download_quality: s.download_quality,
+        download: s.download,
         output_dir: s.output_dir,
         file_stem: `scene-${String(numberOf(i)).padStart(2, "0")}`,
       },
@@ -1814,10 +1826,12 @@ export async function runAgentBatch(job: Job): Promise<string[]> {
     agentRetries ? `${agentRetries} asked again` : "",
     failedTiles ? `${failedTiles} tile(s) failed in Flow` : "",
     missing.length > failed.length ? `${missing.length - failed.length} re-run one by one` : "",
+    s.download === false ? `kept in Flow only, named ${basename(s.output_dir)}-scene-NN (flow_download to fetch)` : "",
   ]
     .filter(Boolean)
     .join(" · ");
-  if (!files.length) throw new Error("No image could be generated for any scene. Open the Flow tab to see what Flow reported.");
+  // With download: false there are no files by design, so "made" is judged by the scenes delivered instead.
+  if (!files.length && failed.length === scenes.length) throw new Error("No image could be generated for any scene. Open the Flow tab to see what Flow reported.");
 
   if (balance !== undefined && left !== undefined) job.credits = balance - left;
   return files;
